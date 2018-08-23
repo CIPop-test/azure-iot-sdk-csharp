@@ -36,14 +36,23 @@
 
   <PropertyGroup>
     <common>$(RootDir)\common\src</common>
+    <deps>$(RootDir)\deps</deps>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="WindowsAzure.Storage" Version="8.7.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <ProjectReference Include="$(deps)\azure-amqp\Microsoft.Azure.Amqp\Microsoft.Azure.Amqp.csproj" />
+    <ProjectReference Include="$(deps)\DotNetty\src\DotNetty.Handlers\DotNetty.Handlers.csproj" />
+    <ProjectReference Include="$(deps)\DotNetty\src\DotNetty.Codecs.Mqtt\DotNetty.Codecs.Mqtt.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' != 'Debug' ">
     <PackageReference Include="DotNetty.Codecs.Mqtt" Version="0.5.0" />
     <PackageReference Include="DotNetty.Handlers" Version="0.5.0" />
     <PackageReference Include="Microsoft.Azure.Amqp" Version="2.3.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-    <PackageReference Include="WindowsAzure.Storage" Version="8.7.0" />
   </ItemGroup>
 
   <ItemGroup>
