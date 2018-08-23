@@ -65,7 +65,6 @@ namespace Microsoft.Azure.Devices.E2ETests
             await SendMethodAndRespondWithSetMethodHandler(Client.TransportType.Mqtt_WebSocket_Only).ConfigureAwait(false);
         }
 
-        [Ignore] // TODO: #558
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Method_DeviceReceivesMethodAndResponseRecovery_Mqtt()
@@ -76,7 +75,6 @@ namespace Microsoft.Azure.Devices.E2ETests
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
         }
 
-        [Ignore] // TODO: #558
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Method_DeviceReceivesMethodAndResponseRecovery_MqttWs()
@@ -87,7 +85,6 @@ namespace Microsoft.Azure.Devices.E2ETests
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
         }
 
-        [Ignore] // TODO: #558
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Method_DeviceMethodGracefulShutdownRecovery_Mqtt()
@@ -98,7 +95,6 @@ namespace Microsoft.Azure.Devices.E2ETests
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
         }
 
-        [Ignore] // TODO: #558
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Method_DeviceMethodGracefulShutdownRecovery_MqttWs()
