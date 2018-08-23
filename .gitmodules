@@ -1,0 +1,6 @@
+[submodule "deps/DotNetty"]
+	path = deps/DotNetty
+	url = https://github.com/Azure/DotNetty.git
+[submodule "deps/azure-amqp"]
+	path = deps/azure-amqp
+	url = https://github.com/Azure/azure-amqp
