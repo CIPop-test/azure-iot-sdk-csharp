@@ -20,6 +20,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
     using Microsoft.Azure.Devices.Client.Exceptions;
     using Microsoft.Azure.Devices.Client.Extensions;
     using System.Diagnostics;
+    using Microsoft.Azure.Devices.Shared;
 
     sealed class MqttIotHubAdapter : ChannelHandlerAdapter
     {
@@ -102,6 +103,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         public override void ChannelActive(IChannelHandlerContext context)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, nameof(ChannelActive));
+
             this.stateFlags = StateFlags.NotConnected;
 
             this.Connect(context);
@@ -111,10 +114,14 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
             base.ChannelActive(context);
 
             context.Read();
+
+            if (Logging.IsEnabled) Logging.Exit(this, context.Name, nameof(ChannelActive));
         }
 
         public override async Task WriteAsync(IChannelHandlerContext context, object data)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, data, nameof(WriteAsync));
+
             try
             {
                 if (this.IsInState(StateFlags.Closed))
@@ -161,10 +168,16 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
                 ShutdownOnError(context, ex);
                 throw;
             }
+            finally
+            {
+                if (Logging.IsEnabled) Logging.Exit(this, context.Name, nameof(WriteAsync));
+            }
         }
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, message, nameof(ChannelRead));
+
             var packet = message as Packet;
             if (packet == null)
             {
@@ -182,10 +195,14 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
                 // we did not start processing CONNACK yet which means we haven't received it yet but the packet of different type has arrived.
                 ShutdownOnError(context, new InvalidOperationException($"Invalid state: {this.stateFlags}, packet: {packet.PacketType}"));
             }
+
+            if (Logging.IsEnabled) Logging.Exit(this, context.Name, nameof(ChannelRead));
         }
 
         public override void ChannelReadComplete(IChannelHandlerContext context)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, nameof(ChannelReadComplete));
+
             base.ChannelReadComplete(context);
             if (this.InboundBacklogSize < this.mqttTransportSettings.MaxPendingInboundMessages)
             {
@@ -195,6 +212,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         public override void ChannelInactive(IChannelHandlerContext context)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, nameof(ChannelInactive));
+            
             if (this.mqttIotHubEventHandler.State == TransportState.Closed)
             {
                 this.Shutdown(context);
@@ -204,15 +223,21 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
             {
                 ShutdownOnError(context, new SocketException());
             }
+
         }
 
         public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, exception.ToString(), nameof(ExceptionCaught));
+
             ShutdownOnError(context, exception);
+
         }
 
         public override void UserEventTriggered(IChannelHandlerContext context, object @event)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, @event, nameof(UserEventTriggered));
+            
             var handshakeCompletionEvent = @event as TlsHandshakeCompletionEvent;
             if (handshakeCompletionEvent != null && !handshakeCompletionEvent.IsSuccessful)
             {
@@ -225,6 +250,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 #region Connect
         async void Connect(IChannelHandlerContext context)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, nameof(Connect));
+            
             try
             {
                 string id = string.IsNullOrWhiteSpace(this.moduleId) ? this.deviceId : $"{this.deviceId}/{this.moduleId}";
@@ -277,6 +304,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         async void ScheduleKeepConnectionAlive(IChannelHandlerContext context)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, nameof(ScheduleKeepConnectionAlive));
+            
             try
             {
                 await context.Channel.EventLoop.ScheduleAsync(PingServerCallback, context, this.pingRequestInterval).ConfigureAwait(false);
@@ -289,6 +318,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         async void ScheduleCheckConnectTimeout(IChannelHandlerContext context)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, nameof(ScheduleCheckConnectTimeout));
+
             try
             {
                 await context.Channel.EventLoop.ScheduleAsync(CheckConnAckTimeoutCallback, context, this.mqttTransportSettings.ConnectArrivalTimeout).ConfigureAwait(false);
@@ -339,6 +370,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         async Task ProcessConnectAckAsync(IChannelHandlerContext context, ConnAckPacket packet)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, packet, nameof(ProcessConnectAckAsync));
+            
             if (packet.ReturnCode != ConnectReturnCode.Accepted)
             {
                 string reason = "CONNECT failed: " + packet.ReturnCode;
@@ -372,6 +405,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         async Task SubscribeAsync(IChannelHandlerContext context, SubscribePacket packetPassed)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, packetPassed, nameof(SubscribeAsync));
+            
             string topicFilter;
             QualityOfService qos;
 
@@ -402,8 +437,10 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
             }
         }
 
-        void ProcessSubAck(SubAckPacket packet)
+        void ProcessSubAck(IChannelHandlerContext context, SubAckPacket packet)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, packet, nameof(ProcessSubAck));
+            
             Contract.Assert(packet != null);
 
             TaskCompletionSource task;
@@ -419,6 +456,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 #region Unsubscribe
         async Task UnSubscribeAsync(IChannelHandlerContext context, UnsubscribePacket packetPassed)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, packetPassed, nameof(UnSubscribeAsync));
+            
             Contract.Assert(packetPassed != null);
 
             int packetId = Util.GetNextPacketId();
@@ -431,8 +470,10 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
             await this.unsubscribeCompletions[packetId].Task.ConfigureAwait(false);
         }
 
-        void ProcessUnsubAck(UnsubAckPacket packet)
+        void ProcessUnsubAck(IChannelHandlerContext context, UnsubAckPacket packet)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, packet, nameof(UnSubscribeAsync));
+            
             Contract.Assert(packet != null);
 
             TaskCompletionSource task;
@@ -448,6 +489,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         async void ProcessMessage(IChannelHandlerContext context, Packet packet)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, packet.PacketType, nameof(ProcessMessage));
+            
             if (this.IsInState(StateFlags.Closed))
             {
                 return;
@@ -461,7 +504,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
                         await this.ProcessConnectAckAsync(context, (ConnAckPacket)packet).ConfigureAwait(false);
                         break;
                     case PacketType.SUBACK:
-                        this.ProcessSubAck(packet as SubAckPacket);
+                        this.ProcessSubAck(context, packet as SubAckPacket);
                         break;
                     case PacketType.PUBLISH:
                         this.ProcessPublish(context, (PublishPacket)packet);
@@ -472,7 +515,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
                     case PacketType.PINGRESP:
                         break;
                     case PacketType.UNSUBACK:
-                        this.ProcessUnsubAck(packet as UnsubAckPacket);
+                        this.ProcessUnsubAck(context, packet as UnsubAckPacket);
                         break;
                     default:
                         ShutdownOnError(context, new InvalidOperationException($"Unexpected packet type {packet.PacketType}"));
@@ -487,6 +530,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         Task AcceptMessageAsync(IChannelHandlerContext context, PublishPacket publish)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, publish, nameof(AcceptMessageAsync));
+            
             Message message;
             try
             {
@@ -509,6 +554,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         Task ProcessAckAsync(IChannelHandlerContext context, PublishWorkItem publish)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, publish, nameof(ProcessAckAsync));
+            
             publish.Completion.Complete();
             return TaskConstants.Completed;
         }
@@ -517,6 +564,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 #region Sending
         void ProcessPublish(IChannelHandlerContext context, PublishPacket packet)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, packet, nameof(ProcessPublish));
+            
             if (this.IsInState(StateFlags.Closed))
             {
                 return;
@@ -538,6 +587,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         async Task SendMessageAsync(IChannelHandlerContext context, Message message)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, message, nameof(SendMessageAsync));
+
             string topicName;
             QualityOfService qos;
 
@@ -575,6 +626,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         Task AcknowledgeAsync(IChannelHandlerContext context, string packetIdString)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, packetIdString, nameof(AcknowledgeAsync));
+
             int packetId;
             if (int.TryParse(packetIdString, out packetId))
             {
@@ -585,12 +638,16 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         Task SendAckAsync(IChannelHandlerContext context, PublishPacket publish)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, publish, nameof(SendAckAsync));
+            
             this.ResumeReadingIfNecessary(context);
             return Util.WriteMessageAsync(context, PubAckPacket.InResponseTo(publish), ShutdownOnWriteErrorHandler);
         }
 
         async Task SendMessageToServerAsync(IChannelHandlerContext context, PublishWorkItem publish)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, publish, nameof(SendMessageToServerAsync));
+
             if (!this.IsInState(StateFlags.Connected))
             {
                 publish.Completion.TrySetCanceled();
@@ -613,6 +670,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 #region Shutdown
         static async void ShutdownOnError(IChannelHandlerContext context, Exception exception)
         {
+            if (Logging.IsEnabled) Logging.Enter(context.Name, exception.ToString(), nameof(ShutdownOnError));
+            
             var self = (MqttIotHubAdapter)context.Handler;
             if (!self.IsInState(StateFlags.Closed))
             {
@@ -639,6 +698,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         async void Shutdown(IChannelHandlerContext context)
         {
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, nameof(Shutdown));
+
             if (this.IsInState(StateFlags.Closed))
             {
                 return;
@@ -659,6 +720,8 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         async void CloseIotHubConnection()
         {
+            if (Logging.IsEnabled) Logging.Enter(this, nameof(CloseIotHubConnection));
+            
             if (this.IsInState(StateFlags.NotConnected) || this.IsInState(StateFlags.Connecting))
             {
                 // closure has happened before IoT Hub connection was established or it was initiated due to disconnect
