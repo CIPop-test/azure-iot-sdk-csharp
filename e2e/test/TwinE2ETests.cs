@@ -431,7 +431,7 @@ namespace Microsoft.Azure.Devices.E2ETests
             Assert.AreEqual<String>(deviceTwin.Properties.Reported[propName].ToString(), propValue1);
 
             // send error command
-            await deviceClient.SendEventAsync(FaultInjection.ComposeErrorInjectionProperties(faultType, reason, delayInSec)).ConfigureAwait(false);
+            await deviceClient.SendEventAsync(FaultInjection.ComposeErrorInjectionProperties(faultType, reason, delayInSec, FaultInjection.DefaultDurationInSec)).ConfigureAwait(false);
 
             deviceTwin = await deviceClient.GetTwinAsync().ConfigureAwait(false);
             Assert.AreEqual<String>(deviceTwin.Properties.Reported[propName].ToString(), propValue1);
@@ -602,7 +602,7 @@ namespace Microsoft.Azure.Devices.E2ETests
             await tcs.Task.ConfigureAwait(false);
 
             // send error command
-            await deviceClient.SendEventAsync(FaultInjection.ComposeErrorInjectionProperties(faultType, reason, delayInSec)).ConfigureAwait(false);
+            await deviceClient.SendEventAsync(FaultInjection.ComposeErrorInjectionProperties(faultType, reason, delayInSec, FaultInjection.DefaultDurationInSec)).ConfigureAwait(false);
 
             // reset ConnectionStatusChangesHandler data
             setConnectionStatusChangesHandlerCount = 0;

@@ -784,7 +784,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
                 // send error command
                 await deviceClient.SendEventAsync(
-                    FaultInjection.ComposeErrorInjectionProperties(faultType, reason, delayInSec)).ConfigureAwait(false);
+                    FaultInjection.ComposeErrorInjectionProperties(faultType, reason, delayInSec, FaultInjection.DefaultDurationInSec)).ConfigureAwait(false);
 
                 await Task.Delay(FaultInjection.WaitForDisconnectMilliseconds).ConfigureAwait(false);
                 await serviceClient.SendAsync(

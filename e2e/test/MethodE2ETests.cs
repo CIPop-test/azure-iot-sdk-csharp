@@ -388,7 +388,7 @@ namespace Microsoft.Azure.Devices.E2ETests
             tcsDisconnected = new TaskCompletionSource<bool>();
 
             // send error command
-            await deviceClient.SendEventAsync(FaultInjection.ComposeErrorInjectionProperties(faultType, reason, delayInSec)).ConfigureAwait(false);
+            await deviceClient.SendEventAsync(FaultInjection.ComposeErrorInjectionProperties(faultType, reason, delayInSec, FaultInjection.DefaultDurationInSec)).ConfigureAwait(false);
 
             // wait for disconnection
             await Task.WhenAny(Task.Delay(FaultInjection.WaitForDisconnectMilliseconds), tcsDisconnected.Task).ConfigureAwait(false);

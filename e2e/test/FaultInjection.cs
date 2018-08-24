@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 #if NET451
         public static int EventHubEpoch = 0;
 #endif
-        public static Client.Message ComposeErrorInjectionProperties(string faultType, string reason, int delayInSecs, int durationInSecs = 0)
+        public static Client.Message ComposeErrorInjectionProperties(string faultType, string reason, int delayInSecs, int durationInSecs)
         {
             string dataBuffer = Guid.NewGuid().ToString();
 
