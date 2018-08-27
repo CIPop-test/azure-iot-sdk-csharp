@@ -223,7 +223,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
             }
             else
             {
-                ShutdownOnError(context, new SocketException());
+                ShutdownOnError(context, new SocketException((int)SocketError.ConnectionReset));
             }
 
             if (Logging.IsEnabled) Logging.Exit(this, context.Name, nameof(ChannelInactive));
