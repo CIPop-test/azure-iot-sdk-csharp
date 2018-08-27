@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Devices.E2ETests
         public const string FaultType_GracefulShutdownAmqp = "ShutDownAmqp";
         public const string FaultType_GracefulShutdownMqtt = "ShutDownMqtt";
 
-        public const string FaultCloseReason_Boom = "Boom";
+        public const string FaultCloseReason_Boom = "boom";
         public const string FaultCloseReason_Bye = "byebye";
 
         public const int DefaultDelayInSec = 1; // Time in seconds after service initiates the fault.

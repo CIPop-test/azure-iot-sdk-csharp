@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
     public class TestDevice
     {
-        private const int DelayAfterDeviceCreationSeconds = 5;
+        private const int DelayAfterDeviceCreationSeconds = 3;
         private static Dictionary<string, TestDevice> s_deviceCache = new Dictionary<string, TestDevice>();
 
         private Device _device;
@@ -65,7 +65,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
                 Device device = await rm.AddDeviceAsync(requestDevice).ConfigureAwait(false);
 
-                log.WriteLine($"{nameof(GetTestDeviceAsync)}: Pausing for {DelayAfterDeviceCreationSeconds} after device was created.");
+                log.WriteLine($"{nameof(GetTestDeviceAsync)}: Pausing for {DelayAfterDeviceCreationSeconds}s after device was created.");
                 await Task.Delay(DelayAfterDeviceCreationSeconds * 1000).ConfigureAwait(false);
 
                 s_deviceCache[prefix] = new TestDevice(device);

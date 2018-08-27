@@ -586,11 +586,11 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         Task ProcessAckAsync(IChannelHandlerContext context, PublishWorkItem publish)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, context.Name, publish, nameof(ProcessAckAsync));
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, publish?.Value, nameof(ProcessAckAsync));
             
             publish.Completion.Complete();
 
-            if (Logging.IsEnabled) Logging.Exit(this, context.Name, publish, nameof(ProcessAckAsync));
+            if (Logging.IsEnabled) Logging.Exit(this, context.Name, publish?.Value, nameof(ProcessAckAsync));
 
             return TaskConstants.Completed;
         }
@@ -647,6 +647,9 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
                 Completion = publishCompletion,
                 Value = packet
             };
+
+            if (Logging.IsEnabled) Logging.Info(this, $"id={packet.PacketId} qos={packet.QualityOfService} topic={packet.TopicName}", nameof(SendMessageAsync));
+
             switch (qos)
             {
                 case QualityOfService.AtMostOnce:
@@ -701,7 +704,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
 
         async Task SendMessageToServerAsync(IChannelHandlerContext context, PublishWorkItem publish)
         {
-            if (Logging.IsEnabled) Logging.Enter(this, context.Name, publish, nameof(SendMessageToServerAsync));
+            if (Logging.IsEnabled) Logging.Enter(this, context.Name, publish?.Value, nameof(SendMessageToServerAsync));
 
             if (!this.IsInState(StateFlags.Connected))
             {
@@ -723,7 +726,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
             }
             finally
             {
-                if (Logging.IsEnabled) Logging.Exit(this, context.Name, publish, nameof(SendMessageToServerAsync));
+                if (Logging.IsEnabled) Logging.Exit(this, context.Name, publish?.Value, nameof(SendMessageToServerAsync));
             }
         }
 #endregion

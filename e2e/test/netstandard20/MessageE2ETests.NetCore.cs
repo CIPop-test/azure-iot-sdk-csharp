@@ -103,6 +103,8 @@ namespace Microsoft.Azure.Devices.E2ETests
             var deviceClient = DeviceClient.CreateFromConnectionString(testDevice.ConnectionString, transport);
             PartitionReceiver eventHubReceiver = await CreateEventHubReceiver(testDevice.Id).ConfigureAwait(false);
 
+            var watch = new Stopwatch();
+
             try
             {
                 deviceClient.OperationTimeoutInMilliseconds = (uint)retryDurationInMilliSec;
@@ -113,6 +115,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
                 deviceClient.SetConnectionStatusChangesHandler((status, statusChangeReason) =>
                 {
+                    _log.WriteLine($"{nameof(ConnectionStatusChangesHandler)}: status={status} statusChangeReason={statusChangeReason} count={setConnectionStatusChangesHandlerCount}");
                     lastConnectionStatus = status;
                     lastConnectionStatusChangeReason = statusChangeReason;
                     setConnectionStatusChangesHandlerCount++;
@@ -142,14 +145,36 @@ namespace Microsoft.Azure.Devices.E2ETests
                 }
                 sw.Stop();
 
-                // send error command and clear eventHubReceiver of the fault injection message
-                await deviceClient.SendEventAsync(FaultInjection.ComposeErrorInjectionProperties(faultType, reason,
+                _log.WriteLine($"Requesting fault injection type={faultType} reason={reason}, delay={delayInSec}s, duration={durationInSec}s");
+
+                uint oldTimeout = deviceClient.OperationTimeoutInMilliseconds;
+
+                try
+                {
+                    // For MQTT FaultInjection will terminate the connection prior to a PUBACK 
+                    // which leads to an infinite loop trying to resend the FaultInjection message.
+                    if (transport == Client.TransportType.Mqtt ||
+                        transport == Client.TransportType.Mqtt_Tcp_Only ||
+                        transport == Client.TransportType.Mqtt_WebSocket_Only)
+                    {
+                        deviceClient.OperationTimeoutInMilliseconds = 1000;
+                    }
+
+                    await deviceClient.SendEventAsync(FaultInjection.ComposeErrorInjectionProperties(faultType, reason,
                     delayInSec,
                     durationInSec)).ConfigureAwait(false);
+                }
+                catch (TimeoutException ex)
+                {
+                    _log.WriteLine($"{nameof(TimeoutException)}: {ex}");
+                }
+                finally
+                {
+                    deviceClient.OperationTimeoutInMilliseconds = oldTimeout;
+                    _log.WriteLine($"Fault injection requested.");
+                }
 
                 await eventHubReceiver.ReceiveAsync(int.MaxValue, TimeSpan.FromSeconds(5)).ConfigureAwait(false);
-
-                Thread.Sleep(1000);
 
                 testMessage = ComposeD2CTestMessage(out payload, out p1Value);
                 await deviceClient.SendEventAsync(testMessage).ConfigureAwait(false);
@@ -177,8 +202,13 @@ namespace Microsoft.Azure.Devices.E2ETests
                 await deviceClient.CloseAsync().ConfigureAwait(false);
                 await eventHubReceiver.CloseAsync().ConfigureAwait(false);
 
-                _log.WriteLine($"Waiting for fault injection interval to finish {FaultInjection.DefaultDelayInSec}s.");
-                await Task.Delay(FaultInjection.DefaultDurationInSec * 1000).ConfigureAwait(false);
+                watch.Stop();
+                if (durationInSec > 0)
+                {
+                    int timeToFinishFaultInjection = durationInSec * 1000 - (int)watch.ElapsedMilliseconds;
+                    _log.WriteLine($"Waiting {timeToFinishFaultInjection}ms to ensure that FaultInjection duration passed.");
+                    await Task.Delay(timeToFinishFaultInjection).ConfigureAwait(false);
+                }
             }
         }
         #endregion
