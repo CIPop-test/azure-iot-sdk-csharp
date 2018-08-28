@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Azure.Devices.Client;
@@ -13,9 +13,11 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.E2ETests
 {
+#if false
+
     [TestClass]
     [TestCategory("IoTHub-E2E")]
-    public partial class MessageE2ETests : IDisposable
+    public partial class MessageSendTests : IDisposable
     {
         private const string DevicePrefix = "E2E_Message_";
         private const string ModulePrefix = "E2E_Module_";
@@ -25,7 +27,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         private readonly ConsoleEventListener _listener;
 
-        public MessageE2ETests()
+        public MessageSendTests()
         {
             _listener = new ConsoleEventListener("Microsoft-Azure-");
         }
@@ -58,36 +60,6 @@ namespace Microsoft.Azure.Devices.E2ETests
         public async Task Message_DeviceSendSingleMessage_Http()
         {
             await SendSingleMessage(Client.TransportType.Http1).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_DeviceReceiveSingleMessage_Amqp()
-        {
-            await ReceiveSingleMessage(Client.TransportType.Amqp_Tcp_Only).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_DeviceReceiveSingleMessage_AmqpWs()
-        {
-            await ReceiveSingleMessage(Client.TransportType.Amqp_WebSocket_Only).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_DeviceReceiveSingleMessage_Mqtt()
-        {
-            await ReceiveSingleMessage(Client.TransportType.Mqtt_Tcp_Only).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_DeviceReceiveSingleMessage_MqttWs()
-        {
-            await ReceiveSingleMessage(Client.TransportType.Mqtt_WebSocket_Only).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task Message_DeviceReceiveSingleMessage_Http()
-        {
-            await ReceiveSingleMessage(Client.TransportType.Http1).ConfigureAwait(false);
         }
 
         [TestMethod]
@@ -255,107 +227,6 @@ namespace Microsoft.Azure.Devices.E2ETests
         public async Task Message_AmqpD2CLinkDropSendRecovery_AmqpWs()
         {
             await SendMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
-                FaultInjection.FaultType_AmqpD2C,
-                FaultInjection.FaultCloseReason_Boom,
-                FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        [TestCategory("IoTHub-FaultInjection")]
-        public async Task Message_TcpConnectionLossReceiveRecovery_Amqp()
-        {
-            await ReceiveMessageRecovery(Client.TransportType.Amqp_Tcp_Only,
-                FaultInjection.FaultType_Tcp,
-                FaultInjection.FaultCloseReason_Boom,
-                FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        [TestCategory("IoTHub-FaultInjection")]
-        public async Task Message_TcpConnectionLossReceiveRecovery_AmqpWs()
-        {
-            await ReceiveMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
-                FaultInjection.FaultType_Tcp,
-                FaultInjection.FaultCloseReason_Boom,
-                FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        [TestCategory("IoTHub-FaultInjection")]
-        public async Task Message_TcpConnectionLossReceiveRecovery_Mqtt()
-        {
-            await ReceiveMessageRecovery(Client.TransportType.Mqtt_Tcp_Only,
-                FaultInjection.FaultType_Tcp,
-                FaultInjection.FaultCloseReason_Boom,
-                FaultInjection.DefaultDelayInSec
-                ).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        [TestCategory("IoTHub-FaultInjection")]
-        public async Task Message_TcpConnectionLossReceiveRecovery_MqttWs()
-        {
-            await ReceiveMessageRecovery(Client.TransportType.Mqtt_WebSocket_Only,
-                FaultInjection.FaultType_Tcp,
-                FaultInjection.FaultCloseReason_Boom,
-                FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        [TestCategory("IoTHub-FaultInjection")]
-        public async Task Message_AmqpConnectionLossReceiveRecovery_Amqp()
-        {
-            await ReceiveMessageRecovery(Client.TransportType.Amqp_Tcp_Only,
-                FaultInjection.FaultType_AmqpConn,
-                "",
-                FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
-        }
-
-        [Ignore] // TODO: #239.
-        [TestMethod]
-        [TestCategory("IoTHub-FaultInjection")]
-        public async Task Message_AmqpConnectionLossReceiveRecovery_AmqpWs()
-        {
-            await ReceiveMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
-                FaultInjection.FaultType_AmqpConn, "",
-                FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        [TestCategory("IoTHub-FaultInjection")]
-        public async Task Message_AmqpSessionLossReceiveRecovery_Amqp()
-        {
-            await ReceiveMessageRecovery(Client.TransportType.Amqp_Tcp_Only,
-                FaultInjection.FaultType_AmqpSess,
-                "",
-                FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        [TestCategory("IoTHub-FaultInjection")]
-        public async Task Message_AmqpSessionLossReceiveRecovery_AmqpWs()
-        {
-            await ReceiveMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
-                FaultInjection.FaultType_AmqpSess,
-                "",
-                FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        [TestCategory("IoTHub-FaultInjection")]
-        public async Task Message_AmqpC2DLinkDropReceiveRecovery_Amqp()
-        {
-            await ReceiveMessageRecovery(Client.TransportType.Amqp_Tcp_Only,
-                FaultInjection.FaultType_AmqpC2D,
-                FaultInjection.FaultCloseReason_Boom,
-                FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        [TestCategory("IoTHub-FaultInjection")]
-        public async Task Message_AmqpC2DLinkDropReceiveRecovery_AmqpWs()
-        {
-            await ReceiveMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
                 FaultInjection.FaultType_AmqpD2C,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -537,47 +408,6 @@ namespace Microsoft.Azure.Devices.E2ETests
         }
 
         [TestMethod]
-        [TestCategory("IoTHub-FaultInjection")]
-        public async Task Message_GracefulShutdownReceiveRecovery_Amqp()
-        {
-            await ReceiveMessageRecovery(Client.TransportType.Amqp_Tcp_Only,
-                FaultInjection.FaultType_GracefulShutdownAmqp,
-                FaultInjection.FaultCloseReason_Bye,
-                FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
-        }
-
-        [Ignore] //TODO: #239
-        [TestMethod]
-        [TestCategory("IoTHub-FaultInjection")]
-        public async Task Message_GracefulShutdownReceiveRecovery_AmqpWs()
-        {
-            await ReceiveMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
-                FaultInjection.FaultType_GracefulShutdownAmqp,
-                FaultInjection.FaultCloseReason_Bye,
-                FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        [TestCategory("IoTHub-FaultInjection")]
-        public async Task Message_GracefulShutdownReceiveRecovery_Mqtt()
-        {
-            await ReceiveMessageRecovery(Client.TransportType.Mqtt_Tcp_Only,
-                FaultInjection.FaultType_GracefulShutdownMqtt,
-                FaultInjection.FaultCloseReason_Bye,
-                FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        [TestCategory("IoTHub-FaultInjection")]
-        public async Task Message_GracefulShutdownReceiveRecovery_MqttWs()
-        {
-            await ReceiveMessageRecovery(Client.TransportType.Mqtt_WebSocket_Only,
-                FaultInjection.FaultType_GracefulShutdownMqtt,
-                FaultInjection.FaultCloseReason_Bye,
-                FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
-        }
-
-        [TestMethod]
         [ExpectedException(typeof(TimeoutException))]
         public async Task Message_TimeOutReachedResponse()
         {
@@ -725,119 +555,6 @@ namespace Microsoft.Azure.Devices.E2ETests
             }
         }
 
-        private async Task ReceiveSingleMessage(Client.TransportType transport)
-        {
-            TestDevice testDevice = await TestDevice.GetTestDeviceAsync(DevicePrefix).ConfigureAwait(false);
-
-            ServiceClient serviceClient = ServiceClient.CreateFromConnectionString(Configuration.IoTHub.ConnectionString);
-            var deviceClient = DeviceClient.CreateFromConnectionString(testDevice.ConnectionString, transport);
-
-            try
-            {
-
-                await deviceClient.OpenAsync().ConfigureAwait(false);
-                if (transport == Client.TransportType.Mqtt_Tcp_Only ||
-                    transport == Client.TransportType.Mqtt_WebSocket_Only)
-                {
-                    _log.WriteLine("Dummy ReceiveAsync to ensure mqtt subscription registration before SendAsync() is called on service client.");
-                    await deviceClient.ReceiveAsync(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
-                }
-
-                string payload, messageId, p1Value;
-                await serviceClient.OpenAsync().ConfigureAwait(false);
-
-                Message msg = ComposeC2DTestMessage(out payload, out messageId, out p1Value);
-                await serviceClient.SendAsync(testDevice.Id, msg).ConfigureAwait(false);
-
-                await VerifyReceivedC2DMessage(transport, deviceClient, payload, p1Value).ConfigureAwait(false);
-            }
-            finally
-            {
-                await deviceClient.CloseAsync().ConfigureAwait(false);
-                await serviceClient.CloseAsync().ConfigureAwait(false);
-            }
-        }
-
-        private async Task ReceiveMessageRecovery(Client.TransportType transport, string faultType, string reason,
-            int delayInSec)
-        {
-            TestDevice testDevice = await TestDevice.GetTestDeviceAsync(DevicePrefix).ConfigureAwait(false);
-
-            ServiceClient serviceClient = ServiceClient.CreateFromConnectionString(Configuration.IoTHub.ConnectionString);
-            var deviceClient = DeviceClient.CreateFromConnectionString(testDevice.ConnectionString, transport);
-
-            var watch = new Stopwatch();
-
-            try
-            {
-                await deviceClient.OpenAsync().ConfigureAwait(false);
-                if (transport == Client.TransportType.Mqtt_Tcp_Only ||
-                    transport == Client.TransportType.Mqtt_WebSocket_Only)
-                {
-                    // Dummy ReceiveAsync to ensure mqtt subscription registration before SendAsync() is called on service client.
-                    await deviceClient.ReceiveAsync(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
-                }
-
-                string payload, messageId, p1Value;
-                await serviceClient.OpenAsync().ConfigureAwait(false);
-                await serviceClient.SendAsync(
-                    testDevice.Id,
-                    ComposeC2DTestMessage(out payload, out messageId, out p1Value)).ConfigureAwait(false);
-                await VerifyReceivedC2DMessage(transport, deviceClient, payload, p1Value).ConfigureAwait(false);
-
-                _log.WriteLine($"Requesting fault injection type={faultType} reason={reason}, delay={delayInSec}s, duration={FaultInjection.DefaultDurationInSec}s");
-
-                uint oldTimeout = deviceClient.OperationTimeoutInMilliseconds;
-
-                try
-                {
-                    // For MQTT FaultInjection will terminate the connection prior to a PUBACK 
-                    // which leads to an infinite loop trying to resend the FaultInjection message.
-                    if (transport == Client.TransportType.Mqtt ||
-                        transport == Client.TransportType.Mqtt_Tcp_Only ||
-                        transport == Client.TransportType.Mqtt_WebSocket_Only)
-                    {
-                        deviceClient.OperationTimeoutInMilliseconds = 1000;
-                    }
-
-                    await deviceClient.SendEventAsync(
-                        FaultInjection.ComposeErrorInjectionProperties(
-                            faultType,
-                            reason,
-                            delayInSec,
-                            FaultInjection.DefaultDurationInSec
-                            )).ConfigureAwait(false);
-                }
-                catch (TimeoutException ex)
-                {
-                    _log.WriteLine($"{nameof(TimeoutException)}: {ex}");
-                }
-                finally
-                {
-                    deviceClient.OperationTimeoutInMilliseconds = oldTimeout;
-                    _log.WriteLine($"Fault injection requested.");
-                }
-
-                watch.Start();
-
-                await Task.Delay(FaultInjection.WaitForDisconnectMilliseconds).ConfigureAwait(false);
-                await serviceClient.SendAsync(
-                    testDevice.Id,
-                    ComposeC2DTestMessage(out payload, out messageId, out p1Value)).ConfigureAwait(false);
-                await VerifyReceivedC2DMessage(transport, deviceClient, payload, p1Value).ConfigureAwait(false);
-            }
-            finally
-            {
-                await deviceClient.CloseAsync().ConfigureAwait(false);
-                await serviceClient.CloseAsync().ConfigureAwait(false);
-
-                watch.Stop();
-                int timeToFinishFaultInjection = FaultInjection.DefaultDurationInSec * 1000 - (int)watch.ElapsedMilliseconds;
-                _log.WriteLine($"Waiting {timeToFinishFaultInjection}ms to ensure that FaultInjection duration passed.");
-                await Task.Delay(timeToFinishFaultInjection).ConfigureAwait(false);
-            }
-        }
-
         public void Dispose()
         {
             Dispose(true);
@@ -852,5 +569,6 @@ namespace Microsoft.Azure.Devices.E2ETests
             }
         }
     }
+    #endif
 }
 
