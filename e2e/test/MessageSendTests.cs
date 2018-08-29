@@ -13,8 +13,6 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.E2ETests
 {
-#if false
-
     [TestClass]
     [TestCategory("IoTHub-E2E")]
     public partial class MessageSendTests : IDisposable
@@ -35,31 +33,31 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestMethod]
         public async Task Message_DeviceSendSingleMessage_Amqp()
         {
-            await SendSingleMessage(Client.TransportType.Amqp_Tcp_Only).ConfigureAwait(false);
+            await SendSingleMessage(TestDeviceType.Sasl, Client.TransportType.Amqp_Tcp_Only).ConfigureAwait(false);
         }
 
         [TestMethod]
         public async Task Message_DeviceSendSingleMessage_AmqpWs()
         {
-            await SendSingleMessage(Client.TransportType.Amqp_WebSocket_Only).ConfigureAwait(false);
+            await SendSingleMessage(TestDeviceType.Sasl, Client.TransportType.Amqp_WebSocket_Only).ConfigureAwait(false);
         }
 
         [TestMethod]
         public async Task Message_DeviceSendSingleMessage_Mqtt()
         {
-            await SendSingleMessage(Client.TransportType.Mqtt_Tcp_Only).ConfigureAwait(false);
+            await SendSingleMessage(TestDeviceType.Sasl, Client.TransportType.Mqtt_Tcp_Only).ConfigureAwait(false);
         }
 
         [TestMethod]
         public async Task Message_DeviceSendSingleMessage_MqttWs()
         {
-            await SendSingleMessage(Client.TransportType.Mqtt_WebSocket_Only).ConfigureAwait(false);
+            await SendSingleMessage(TestDeviceType.Sasl, Client.TransportType.Mqtt_WebSocket_Only).ConfigureAwait(false);
         }
 
         [TestMethod]
         public async Task Message_DeviceSendSingleMessage_Http()
         {
-            await SendSingleMessage(Client.TransportType.Http1).ConfigureAwait(false);
+            await SendSingleMessage(TestDeviceType.Sasl, Client.TransportType.Http1).ConfigureAwait(false);
         }
 
         [TestMethod]
@@ -70,7 +68,7 @@ namespace Microsoft.Azure.Devices.E2ETests
             httpTransportSettings.Proxy = new WebProxy(ProxyServerAddress);
             ITransportSettings[] transportSettings = new ITransportSettings[] { httpTransportSettings };
 
-            await SendSingleMessage(transportSettings).ConfigureAwait(false);
+            await SendSingleMessage(TestDeviceType.Sasl, transportSettings).ConfigureAwait(false);
         }
 
         [TestMethod]
@@ -82,7 +80,7 @@ namespace Microsoft.Azure.Devices.E2ETests
             httpTransportSettings.Proxy = proxy;
             ITransportSettings[] transportSettings = new ITransportSettings[] { httpTransportSettings };
 
-            await SendSingleMessage(transportSettings).ConfigureAwait(false);
+            await SendSingleMessage(TestDeviceType.Sasl, transportSettings).ConfigureAwait(false);
             Assert.AreNotEqual(proxy.Counter, 0);
         }
 
@@ -94,7 +92,7 @@ namespace Microsoft.Azure.Devices.E2ETests
             amqpTransportSettings.Proxy = new WebProxy(ProxyServerAddress);
             ITransportSettings[] transportSettings = new ITransportSettings[] { amqpTransportSettings };
 
-            await SendSingleMessage(transportSettings).ConfigureAwait(false);
+            await SendSingleMessage(TestDeviceType.Sasl, transportSettings).ConfigureAwait(false);
         }
 
         [TestMethod]
@@ -106,7 +104,7 @@ namespace Microsoft.Azure.Devices.E2ETests
             mqttTransportSettings.Proxy = new WebProxy(ProxyServerAddress);
             ITransportSettings[] transportSettings = new ITransportSettings[] { mqttTransportSettings };
 
-            await SendSingleMessage(transportSettings).ConfigureAwait(false);
+            await SendSingleMessage(TestDeviceType.Sasl, transportSettings).ConfigureAwait(false);
         }
 
         [TestMethod]
@@ -117,7 +115,7 @@ namespace Microsoft.Azure.Devices.E2ETests
             amqpTransportSettings.Proxy = new WebProxy(ProxyServerAddress);
             ITransportSettings[] transportSettings = new ITransportSettings[] { amqpTransportSettings };
 
-            await SendSingleMessageModule(transportSettings).ConfigureAwait(false);
+            await SendSingleMessageModule(TestDeviceType.Sasl, transportSettings).ConfigureAwait(false);
         }
 
         [TestMethod]
@@ -129,14 +127,16 @@ namespace Microsoft.Azure.Devices.E2ETests
             mqttTransportSettings.Proxy = new WebProxy(ProxyServerAddress);
             ITransportSettings[] transportSettings = new ITransportSettings[] { mqttTransportSettings };
 
-            await SendSingleMessageModule(transportSettings).ConfigureAwait(false);
+            await SendSingleMessageModule(TestDeviceType.Sasl, transportSettings).ConfigureAwait(false);
         }
 
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_TcpConnectionLossSendRecovery_Amqp()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_Tcp_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
                 FaultInjection.FaultType_Tcp,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -146,7 +146,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_TcpConnectionLossSendRecovery_AmqpWs()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
                 FaultInjection.FaultType_Tcp,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -156,7 +158,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_TcpConnectionLossSendRecovery_Mqtt()
         {
-            await SendMessageRecovery(Client.TransportType.Mqtt_Tcp_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Mqtt_Tcp_Only,
                 FaultInjection.FaultType_Tcp,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -166,7 +170,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_TcpConnectionLossSendRecovery_MqttWs()
         {
-            await SendMessageRecovery(Client.TransportType.Mqtt_WebSocket_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Mqtt_WebSocket_Only,
                 FaultInjection.FaultType_Tcp,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -176,7 +182,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_AmqpConnectionLossSendRecovery_Amqp()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_Tcp_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
                 FaultInjection.FaultType_AmqpConn,
                 "",
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -186,7 +194,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_AmqpConnectionLossSendRecovery_AmqpWs()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
                 FaultInjection.FaultType_AmqpConn,
                 "",
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -196,7 +206,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_AmqpSessionLossSendRecovery_Amqp()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_Tcp_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
                 FaultInjection.FaultType_AmqpSess,
                 "",
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -206,7 +218,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_AmqpSessionLossSendRecovery_AmqpWs()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
                 FaultInjection.FaultType_AmqpSess,
                 "",
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -216,7 +230,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_AmqpD2CLinkDropSendRecovery_Amqp()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_Tcp_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
                 FaultInjection.FaultType_AmqpD2C,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -226,7 +242,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_AmqpD2CLinkDropSendRecovery_AmqpWs()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
                 FaultInjection.FaultType_AmqpD2C,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -237,7 +255,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_ThrottledConnectionRecovery_Amqp()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_Tcp_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
                 FaultInjection.FaultType_Throttle,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec,
@@ -249,7 +269,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_ThrottledConnectionRecovery_AmqpWs()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
                 FaultInjection.FaultType_Throttle,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec,
@@ -262,7 +284,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [ExpectedException(typeof(System.TimeoutException))]
         public async Task Message_ThrottledConnectionLongTimeNoRecovery_Amqp()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_Tcp_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
                 FaultInjection.FaultType_Throttle,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec,
@@ -276,7 +300,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [ExpectedException(typeof(System.TimeoutException))]
         public async Task Message_ThrottledConnectionLongTimeNoRecovery_AmqpWs()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
                 FaultInjection.FaultType_Throttle,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec,
@@ -298,7 +324,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [ExpectedException(typeof(Client.Exceptions.DeviceMaximumQueueDepthExceededException))]
         public async Task Message_QuotaExceededRecovery_Amqp()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_Tcp_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
                 FaultInjection.FaultType_QuotaExceeded,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec,
@@ -310,7 +338,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [ExpectedException(typeof(Client.Exceptions.DeviceMaximumQueueDepthExceededException))]
         public async Task Message_QuotaExceededRecovery_AmqpWs()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
                 FaultInjection.FaultType_QuotaExceeded,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec,
@@ -322,7 +352,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [ExpectedException(typeof(Client.Exceptions.QuotaExceededException))]
         public async Task Message_QuotaExceededRecovery_Http()
         {
-            await SendMessageRecovery(Client.TransportType.Http1,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Http1,
                 FaultInjection.FaultType_QuotaExceeded,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec,
@@ -335,7 +367,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [ExpectedException(typeof(Client.Exceptions.UnauthorizedException))]
         public async Task Message_AuthenticationRecovery_Amqp()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_Tcp_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
                 FaultInjection.FaultType_Auth,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec,
@@ -348,7 +382,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [ExpectedException(typeof(Client.Exceptions.UnauthorizedException))]
         public async Task Message_AuthenticationRecovery_AmqpWs()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
                 FaultInjection.FaultType_Auth,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec,
@@ -360,7 +396,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [ExpectedException(typeof(Client.Exceptions.UnauthorizedException))]
         public async Task Message_AuthenticationRecovery_Http()
         {
-            await SendMessageRecovery(Client.TransportType.Http1,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Http1,
                 FaultInjection.FaultType_Auth,
                 FaultInjection.FaultCloseReason_Boom,
                 FaultInjection.DefaultDelayInSec,
@@ -371,7 +409,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_SendGracefulShutdownSendRecovery_Amqp()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_Tcp_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_Tcp_Only,
                 FaultInjection.FaultType_GracefulShutdownAmqp,
                 FaultInjection.FaultCloseReason_Bye,
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -381,7 +421,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_GracefulShutdownSendRecovery_AmqpWs()
         {
-            await SendMessageRecovery(Client.TransportType.Amqp_WebSocket_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Amqp_WebSocket_Only,
                 FaultInjection.FaultType_GracefulShutdownAmqp,
                 FaultInjection.FaultCloseReason_Bye,
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -391,7 +433,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_GracefulShutdownSendRecovery_Mqtt()
         {
-            await SendMessageRecovery(Client.TransportType.Mqtt_Tcp_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Mqtt_Tcp_Only,
                 FaultInjection.FaultType_GracefulShutdownMqtt,
                 FaultInjection.FaultCloseReason_Bye,
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -401,7 +445,9 @@ namespace Microsoft.Azure.Devices.E2ETests
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_GracefulShutdownSendRecovery_MqttWs()
         {
-            await SendMessageRecovery(Client.TransportType.Mqtt_WebSocket_Only,
+            await SendMessageRecovery(
+                TestDeviceType.Sasl,
+                Client.TransportType.Mqtt_WebSocket_Only,
                 FaultInjection.FaultType_GracefulShutdownMqtt,
                 FaultInjection.FaultCloseReason_Bye,
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
@@ -418,6 +464,36 @@ namespace Microsoft.Azure.Devices.E2ETests
         public async Task Message_NoTimeoutPassed()
         {
             await DefaultTimeout().ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task X509_DeviceSendSingleMessage_Amqp()
+        {
+            await SendSingleMessage(TestDeviceType.X509, Client.TransportType.Amqp_Tcp_Only).ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task X509_DeviceSendSingleMessage_AmqpWs()
+        {
+            await SendSingleMessage(TestDeviceType.X509, Client.TransportType.Amqp_WebSocket_Only).ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task X509_DeviceSendSingleMessage_Mqtt()
+        {
+            await SendSingleMessage(TestDeviceType.X509, Client.TransportType.Mqtt_Tcp_Only).ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task X509_DeviceSendSingleMessage_MqttWs()
+        {
+            await SendSingleMessage(TestDeviceType.X509, Client.TransportType.Mqtt_WebSocket_Only).ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task X509_DeviceSendSingleMessage_Http()
+        {
+            await SendSingleMessage(TestDeviceType.X509, Client.TransportType.Http1).ConfigureAwait(false);
         }
 
         private async Task DefaultTimeout()
@@ -509,33 +585,53 @@ namespace Microsoft.Azure.Devices.E2ETests
             sw.Stop();
         }
 
-        internal async Task SendSingleMessage(Client.TransportType transport)
+        private async Task SendSingleMessage(TestDeviceType type, Client.TransportType transport)
         {
-            ITransportSettings[] transportSettings;
-            switch (transport)
-            {
-                case Client.TransportType.Amqp_Tcp_Only:
-                case Client.TransportType.Amqp_WebSocket_Only:
-                    transportSettings = new ITransportSettings[] { new Client.AmqpTransportSettings(transport) };
-                    break;
-
-                case Client.TransportType.Mqtt_Tcp_Only:
-                case Client.TransportType.Mqtt_WebSocket_Only:
-                    transportSettings = new ITransportSettings[] { new Client.Transport.Mqtt.MqttTransportSettings(transport) };
-                    break;
-
-                case Client.TransportType.Http1:
-                    transportSettings = new ITransportSettings[] { new Client.Http1TransportSettings() };
-                    break;
-
-                default:
-                    throw new NotSupportedException($"Unknown transport: '{transport}'.");
-            }
-
-            await SendSingleMessage(transportSettings).ConfigureAwait(false);
+            TestDevice testDevice = await TestDevice.GetTestDeviceAsync(DevicePrefix, type).ConfigureAwait(false);
+            return SendSingleMessage()
         }
 
-        internal async Task SendSingleMessageModule(ITransportSettings[] transportSettings)
+        private async Task SendSingleMessage(TestDeviceType type, ITransportSettings[] transportSettings)
+        {
+            TestDevice testDevice = await TestDevice.GetTestDeviceAsync(DevicePrefix).ConfigureAwait(false);
+
+        }
+
+
+        private async Task SendSingleMessage(TestDeviceType type, DeviceClient deviceClient)
+        {
+            EventHubListener eventHubListener = await EventHubListener.CreateListener(testDevice.Id).ConfigureAwait(false);
+
+
+            try
+            {
+                await deviceClient.OpenAsync().ConfigureAwait(false);
+
+                string payload;
+                string p1Value;
+                Client.Message testMessage = ComposeD2CTestMessage(out payload, out p1Value);
+                await deviceClient.SendEventAsync(testMessage).ConfigureAwait(false);
+
+                bool isReceived = false;
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                while (!isReceived && sw.Elapsed.Minutes < 1)
+                {
+                    var events = await eventHubReceiver.ReceiveAsync(int.MaxValue, TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+                    isReceived = VerifyTestMessage(events, testDevice.Id, payload, p1Value);
+                }
+                sw.Stop();
+
+                Assert.IsTrue(isReceived, "Message is not received.");
+            }
+            finally
+            {
+                await deviceClient.CloseAsync().ConfigureAwait(false);
+                await eventHubReceiver.CloseAsync().ConfigureAwait(false);
+            }
+        }
+
+        private async Task SendSingleMessageModule(TestDeviceType type, ITransportSettings[] transportSettings)
         {
             TestModule testModule = await TestModule.GetTestModuleAsync(DevicePrefix, ModulePrefix).ConfigureAwait(false);
             var moduleClient = ModuleClient.CreateFromConnectionString(testModule.ConnectionString, transportSettings);
@@ -555,6 +651,170 @@ namespace Microsoft.Azure.Devices.E2ETests
             }
         }
 
+        internal async Task SendMessageThrottledForHttp()
+        {
+            TestDevice testDevice = await TestDevice.GetTestDeviceAsync(DevicePrefix).ConfigureAwait(false);
+
+            PartitionReceiver eventHubReceiver = await CreateEventHubReceiver(testDevice.Id).ConfigureAwait(false);
+
+            var deviceClient = DeviceClient.CreateFromConnectionString(testDevice.ConnectionString, Client.TransportType.Http1);
+
+            try
+            {
+                deviceClient.OperationTimeoutInMilliseconds = (uint)FaultInjection.ShortRetryInMilliSec;
+                await deviceClient.OpenAsync().ConfigureAwait(false);
+
+                string payload, p1Value;
+                Client.Message testMessage = ComposeD2CTestMessage(out payload, out p1Value);
+                await deviceClient.SendEventAsync(testMessage).ConfigureAwait(false);
+
+                bool isReceived = false;
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                while (!isReceived && sw.Elapsed.Minutes < 1)
+                {
+                    var events = await eventHubReceiver.ReceiveAsync(int.MaxValue, TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                    isReceived = VerifyTestMessage(events, testDevice.Id, payload, p1Value);
+                }
+                sw.Stop();
+
+                // Implementation of error injection of throttling on http is that it will throttle the
+                // fault injection message itself only.  The duration of fault has no effect on http throttle.
+                // Client is supposed to retry sending the throttling fault message until operation timeout.
+                await deviceClient.SendEventAsync(FaultInjection.ComposeErrorInjectionProperties(FaultInjection.FaultType_Throttle,
+                    FaultInjection.FaultCloseReason_Boom, FaultInjection.DefaultDelayInSec, FaultInjection.DefaultDurationInSec)).ConfigureAwait(false);
+            }
+            finally
+            {
+                await deviceClient.CloseAsync().ConfigureAwait(false);
+                await eventHubReceiver.CloseAsync().ConfigureAwait(false);
+            }
+        }
+
+        internal async Task SendSingleMessage(ITransportSettings[] transportSettings)
+        {
+
+        }
+
+        internal async Task SendMessageRecovery(
+            TestDeviceType type,
+            Client.TransportType transport,
+            string faultType, string reason, int delayInSec, int durationInSec = 0, int retryDurationInMilliSec = FaultInjection.RecoveryTimeMilliseconds)
+        {
+            TestDevice testDevice = await TestDevice.GetTestDeviceAsync(DevicePrefix, type).ConfigureAwait(false);
+
+            var deviceClient = DeviceClient.CreateFromConnectionString(testDevice.ConnectionString, transport);
+            PartitionReceiver eventHubReceiver = await CreateEventHubReceiver(testDevice.Id).ConfigureAwait(false);
+
+            var watch = new Stopwatch();
+
+            try
+            {
+                deviceClient.OperationTimeoutInMilliseconds = (uint)retryDurationInMilliSec;
+
+                ConnectionStatus? lastConnectionStatus = null;
+                ConnectionStatusChangeReason? lastConnectionStatusChangeReason = null;
+                int setConnectionStatusChangesHandlerCount = 0;
+
+                deviceClient.SetConnectionStatusChangesHandler((status, statusChangeReason) =>
+                {
+                    _log.WriteLine($"{nameof(ConnectionStatusChangesHandler)}: status={status} statusChangeReason={statusChangeReason} count={setConnectionStatusChangesHandlerCount}");
+                    lastConnectionStatus = status;
+                    lastConnectionStatusChangeReason = statusChangeReason;
+                    setConnectionStatusChangesHandlerCount++;
+                });
+
+                await deviceClient.OpenAsync().ConfigureAwait(false);
+
+                if (transport != Client.TransportType.Http1)
+                {
+                    Assert.AreEqual(1, setConnectionStatusChangesHandlerCount);
+                    Assert.AreEqual(ConnectionStatus.Connected, lastConnectionStatus);
+                    Assert.AreEqual(ConnectionStatusChangeReason.Connection_Ok, lastConnectionStatusChangeReason);
+                }
+
+                string payload, p1Value;
+                Client.Message testMessage = ComposeD2CTestMessage(out payload, out p1Value);
+                await deviceClient.SendEventAsync(testMessage).ConfigureAwait(false);
+
+
+                bool isReceived = false;
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                while (!isReceived && sw.Elapsed.Minutes < 1)
+                {
+                    var events = await eventHubReceiver.ReceiveAsync(int.MaxValue, TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                    isReceived = VerifyTestMessage(events, testDevice.Id, payload, p1Value);
+                }
+                sw.Stop();
+
+                _log.WriteLine($"Requesting fault injection type={faultType} reason={reason}, delay={delayInSec}s, duration={durationInSec}s");
+
+                uint oldTimeout = deviceClient.OperationTimeoutInMilliseconds;
+
+                try
+                {
+                    // For MQTT FaultInjection will terminate the connection prior to a PUBACK 
+                    // which leads to an infinite loop trying to resend the FaultInjection message.
+                    if (transport == Client.TransportType.Mqtt ||
+                        transport == Client.TransportType.Mqtt_Tcp_Only ||
+                        transport == Client.TransportType.Mqtt_WebSocket_Only)
+                    {
+                        deviceClient.OperationTimeoutInMilliseconds = 1000;
+                    }
+
+                    await deviceClient.SendEventAsync(FaultInjection.ComposeErrorInjectionProperties(faultType, reason,
+                    delayInSec,
+                    durationInSec)).ConfigureAwait(false);
+                }
+                catch (TimeoutException ex)
+                {
+                    _log.WriteLine($"{nameof(TimeoutException)}: {ex}");
+                }
+                finally
+                {
+                    deviceClient.OperationTimeoutInMilliseconds = oldTimeout;
+                    _log.WriteLine($"Fault injection requested.");
+                }
+
+                await eventHubReceiver.ReceiveAsync(int.MaxValue, TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+
+                testMessage = ComposeD2CTestMessage(out payload, out p1Value);
+                await deviceClient.SendEventAsync(testMessage).ConfigureAwait(false);
+
+                sw.Reset();
+                sw.Start();
+                while (!isReceived && sw.Elapsed.Minutes < 1)
+                {
+                    var events = await eventHubReceiver.ReceiveAsync(int.MaxValue, TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                    isReceived = VerifyTestMessage(events, testDevice.Id, payload, p1Value);
+                }
+                sw.Stop();
+
+                await deviceClient.CloseAsync().ConfigureAwait(false);
+
+                if (transport != Client.TransportType.Http1)
+                {
+                    Assert.AreEqual(2, setConnectionStatusChangesHandlerCount);
+                    Assert.AreEqual(ConnectionStatus.Disabled, lastConnectionStatus);
+                    Assert.AreEqual(ConnectionStatusChangeReason.Client_Close, lastConnectionStatusChangeReason);
+                }
+            }
+            finally
+            {
+                await deviceClient.CloseAsync().ConfigureAwait(false);
+                await eventHubReceiver.CloseAsync().ConfigureAwait(false);
+
+                watch.Stop();
+                if (durationInSec > 0)
+                {
+                    int timeToFinishFaultInjection = durationInSec * 1000 - (int)watch.ElapsedMilliseconds;
+                    _log.WriteLine($"Waiting {timeToFinishFaultInjection}ms to ensure that FaultInjection duration passed.");
+                    await Task.Delay(timeToFinishFaultInjection).ConfigureAwait(false);
+                }
+            }
+        }
+        
         public void Dispose()
         {
             Dispose(true);
@@ -569,6 +829,4 @@ namespace Microsoft.Azure.Devices.E2ETests
             }
         }
     }
-    #endif
 }
-
