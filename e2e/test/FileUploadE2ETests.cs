@@ -98,7 +98,7 @@ namespace Microsoft.Azure.Devices.E2ETests
         {
             TestDevice testDevice = await TestDevice.GetTestDeviceAsync(
                 DevicePrefix, 
-                x509auth ? TestDeviceType.X509 : TestDeviceType.Sasl).ConfigureAwait(false);
+                x509auth ? TestAuthenticationType.X509 : TestAuthenticationType.Sasl).ConfigureAwait(false);
 
             ServiceClient serviceClient = ServiceClient.CreateFromConnectionString(Configuration.IoTHub.ConnectionString);
             FileNotificationReceiver<FileNotification> notificationReceiver = serviceClient.GetFileNotificationReceiver();

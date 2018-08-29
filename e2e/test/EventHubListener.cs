@@ -14,18 +14,18 @@ using System.Threading.Tasks;
 namespace Microsoft.Azure.Devices.E2ETests
 {
     // EventHubListener for .NET Core.
-    public class EventHubListener
+    public class EventHubTestListener
     {
         private PartitionReceiver _partitionReceiver;
         private static TestLogging s_log = TestLogging.GetInstance();
 
-        private EventHubListener(PartitionReceiver receiver)
+        private EventHubTestListener(PartitionReceiver receiver)
         {
             _partitionReceiver = receiver;
         }
 
         #region PAL
-        public static async Task<EventHubListener> CreateListener(string deviceName)
+        public static async Task<EventHubTestListener> CreateListener(string deviceName)
         {
             PartitionReceiver eventHubReceiver = null;
             Stopwatch sw = new Stopwatch();
@@ -50,13 +50,13 @@ namespace Microsoft.Azure.Devices.E2ETests
                 }
                 catch (QuotaExceededException ex)
                 {
-                    s_log.WriteLine($"{nameof(EventHubListener)}.{nameof(CreateListener)}: Cannot create receiver: {ex}");
+                    s_log.WriteLine($"{nameof(EventHubTestListener)}.{nameof(CreateListener)}: Cannot create receiver: {ex}");
                 }
             }
 
             sw.Stop();
 
-            return new EventHubListener(eventHubReceiver);
+            return new EventHubTestListener(eventHubReceiver);
         }
 
         public async Task<bool> WaitForMessage(string deviceId, string payload, string p1Value)
@@ -75,22 +75,27 @@ namespace Microsoft.Azure.Devices.E2ETests
             return isReceived;
         }
 
+        public Task CloseAsync()
+        {
+            return _partitionReceiver.CloseAsync();
+        }
+
         private bool VerifyTestMessage(IEnumerable<EventData> events, string deviceName, string payload, string p1Value)
         {
             if (events == null)
             {
-                s_log.WriteLine($"{nameof(EventHubListener)}.{nameof(VerifyTestMessage)}: no events received.");
+                s_log.WriteLine($"{nameof(EventHubTestListener)}.{nameof(VerifyTestMessage)}: no events received.");
                 return false;
             }
 
-            s_log.WriteLine($"{nameof(EventHubListener)}.{nameof(VerifyTestMessage)}: {events.Count()} events received.");
+            s_log.WriteLine($"{nameof(EventHubTestListener)}.{nameof(VerifyTestMessage)}: {events.Count()} events received.");
 
             foreach (var eventData in events)
             {
                 try
                 {
                     var data = Encoding.UTF8.GetString(eventData.Body.ToArray());
-                    s_log.WriteLine($"{nameof(EventHubListener)}.{nameof(VerifyTestMessage)}: event data: '{data}'");
+                    s_log.WriteLine($"{nameof(EventHubTestListener)}.{nameof(VerifyTestMessage)}: event data: '{data}'");
 
                     if (data == payload)
                     {
@@ -104,11 +109,11 @@ namespace Microsoft.Azure.Devices.E2ETests
                 }
                 catch (Exception ex)
                 {
-                    s_log.WriteLine($"{nameof(EventHubListener)}.{nameof(VerifyTestMessage)}: Cannot read eventData: {ex}");
+                    s_log.WriteLine($"{nameof(EventHubTestListener)}.{nameof(VerifyTestMessage)}: Cannot read eventData: {ex}");
                 }
             }
 
-            s_log.WriteLine($"{nameof(EventHubListener)}.{nameof(VerifyTestMessage)}: none of the messages matched the expected payload '{payload}'.");
+            s_log.WriteLine($"{nameof(EventHubTestListener)}.{nameof(VerifyTestMessage)}: none of the messages matched the expected payload '{payload}'.");
 
             return false;
         }
