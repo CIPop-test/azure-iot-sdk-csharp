@@ -3,7 +3,6 @@
 
 using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.Azure.Devices.Common;
-using Microsoft.Azure.EventHubs;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,52 +10,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if !NET451
+using Microsoft.Azure.EventHubs;
+#else
+using Microsoft.ServiceBus.Messaging;
+#endif
+
 namespace Microsoft.Azure.Devices.E2ETests
 {
-    // EventHubListener for .NET Core.
-    public class EventHubTestListener
+    // Common code for EventHubListener.
+    public partial class EventHubTestListener
     {
-        private PartitionReceiver _partitionReceiver;
         private static TestLogging s_log = TestLogging.GetInstance();
 
-        private EventHubTestListener(PartitionReceiver receiver)
+        public static Task<EventHubTestListener> CreateListener(string deviceName)
         {
-            _partitionReceiver = receiver;
-        }
-
-        #region PAL
-        public static async Task<EventHubTestListener> CreateListener(string deviceName)
-        {
-            PartitionReceiver eventHubReceiver = null;
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-
-            var builder = new EventHubsConnectionStringBuilder(Configuration.IoTHub.EventHubString)
-            {
-                EntityPath = Configuration.IoTHub.EventHubCompatibleName
-            };
-
-            EventHubClient eventHubClient = EventHubClient.CreateFromConnectionString(builder.ToString());
-            var eventRuntimeInformation = await eventHubClient.GetRuntimeInformationAsync().ConfigureAwait(false);
-            var eventHubPartitionsCount = eventRuntimeInformation.PartitionCount;
-            string partition = EventHubPartitionKeyResolver.ResolveToPartition(deviceName, eventHubPartitionsCount);
-            string consumerGroupName = Configuration.IoTHub.EventHubConsumerGroup;
-
-            while (eventHubReceiver == null && sw.Elapsed.Minutes < 1)
-            {
-                try
-                {
-                    eventHubReceiver = eventHubClient.CreateReceiver(consumerGroupName, partition, DateTime.Now.AddMinutes(-5));
-                }
-                catch (QuotaExceededException ex)
-                {
-                    s_log.WriteLine($"{nameof(EventHubTestListener)}.{nameof(CreateListener)}: Cannot create receiver: {ex}");
-                }
-            }
-
-            sw.Stop();
-
-            return new EventHubTestListener(eventHubReceiver);
+            return CreateListenerPal(deviceName);
         }
 
         public async Task<bool> WaitForMessage(string deviceId, string payload, string p1Value)
@@ -66,7 +35,7 @@ namespace Microsoft.Azure.Devices.E2ETests
             sw.Start();
             while (!isReceived && sw.Elapsed.Minutes < 1)
             {
-                var events = await _partitionReceiver.ReceiveAsync(int.MaxValue, TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+                var events = await _receiver.ReceiveAsync(int.MaxValue, TimeSpan.FromSeconds(5)).ConfigureAwait(false);
                 isReceived = VerifyTestMessage(events, deviceId, payload, p1Value);
             }
 
@@ -77,7 +46,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         public Task CloseAsync()
         {
-            return _partitionReceiver.CloseAsync();
+            return _receiver.CloseAsync();
         }
 
         private bool VerifyTestMessage(IEnumerable<EventData> events, string deviceName, string payload, string p1Value)
@@ -94,7 +63,12 @@ namespace Microsoft.Azure.Devices.E2ETests
             {
                 try
                 {
+#if !NET451
                     var data = Encoding.UTF8.GetString(eventData.Body.ToArray());
+#else
+                    var data = Encoding.UTF8.GetString(eventData.GetBytes());
+#endif
+
                     s_log.WriteLine($"{nameof(EventHubTestListener)}.{nameof(VerifyTestMessage)}: event data: '{data}'");
 
                     if (data == payload)
@@ -133,8 +107,5 @@ namespace Microsoft.Azure.Devices.E2ETests
 
             return false;
         }
-
-        #endregion
-
     }
 }

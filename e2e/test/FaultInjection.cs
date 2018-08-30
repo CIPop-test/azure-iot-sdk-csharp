@@ -44,9 +44,6 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         public const int RecoveryTimeMilliseconds = 5 * 60 * 1000;
 
-#if NET451
-        public static int EventHubEpoch = 0;
-#endif
         public static Client.Message ComposeErrorInjectionProperties(string faultType, string reason, int delayInSecs, int durationInSecs)
         {
             string dataBuffer = Guid.NewGuid().ToString();

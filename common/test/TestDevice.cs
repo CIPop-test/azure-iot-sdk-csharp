@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.E2ETests
 {
-    public enum TestAuthenticationType
+    public enum TestDeviceType
     {
         Sasl,
         X509
@@ -38,7 +38,7 @@ namespace Microsoft.Azure.Devices.E2ETests
         /// <param name="namePrefix"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static async Task<TestDevice> GetTestDeviceAsync(string namePrefix, TestAuthenticationType type = TestAuthenticationType.Sasl)
+        public static async Task<TestDevice> GetTestDeviceAsync(string namePrefix, TestDeviceType type = TestDeviceType.Sasl)
         {
             string prefix = namePrefix + type + "_";
 
@@ -56,7 +56,7 @@ namespace Microsoft.Azure.Devices.E2ETests
                 Client.IAuthenticationMethod auth = null;
 
                 Device requestDevice = new Device(deviceName);
-                if (type == TestAuthenticationType.X509)
+                if (type == TestDeviceType.X509)
                 {
                     requestDevice.Authentication = new AuthenticationMechanism()
                     {
