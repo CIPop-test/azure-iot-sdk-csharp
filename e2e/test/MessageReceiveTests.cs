@@ -119,7 +119,6 @@ namespace Microsoft.Azure.Devices.E2ETests
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
         }
 
-        [Ignore] // TODO: #239.
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_AmqpConnectionLossReceiveRecovery_AmqpWs()
@@ -191,7 +190,6 @@ namespace Microsoft.Azure.Devices.E2ETests
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
         }
 
-        [Ignore] //TODO: #239
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_GracefulShutdownReceiveRecovery_AmqpWs()
@@ -400,83 +398,45 @@ namespace Microsoft.Azure.Devices.E2ETests
             string reason,
             int delayInSec)
         {
-            TestDevice testDevice = await TestDevice.GetTestDeviceAsync(DevicePrefix, type).ConfigureAwait(false);
-            DeviceClient deviceClient = testDevice.CreateDeviceClient(transport);
-
             ServiceClient serviceClient = ServiceClient.CreateFromConnectionString(Configuration.IoTHub.ConnectionString);
 
-            var watch = new Stopwatch();
-
-            try
+            Func<DeviceClient, TestDevice, Task> init = async (deviceClient, testDevice) =>
             {
-                await deviceClient.OpenAsync().ConfigureAwait(false);
+                await serviceClient.OpenAsync().ConfigureAwait(false);
+                
                 if (transport == Client.TransportType.Mqtt_Tcp_Only ||
                     transport == Client.TransportType.Mqtt_WebSocket_Only)
                 {
                     // Dummy ReceiveAsync to ensure mqtt subscription registration before SendAsync() is called on service client.
                     await deviceClient.ReceiveAsync(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
                 }
+            };
 
-                string payload, messageId, p1Value;
-                await serviceClient.OpenAsync().ConfigureAwait(false);
-                await serviceClient.SendAsync(
-                    testDevice.Id,
-                    ComposeC2DTestMessage(out payload, out messageId, out p1Value)).ConfigureAwait(false);
-                await VerifyReceivedC2DMessage(transport, deviceClient, payload, p1Value).ConfigureAwait(false);
-
-                _log.WriteLine($"Requesting fault injection type={faultType} reason={reason}, delay={delayInSec}s, duration={FaultInjection.DefaultDurationInSec}s");
-
-                uint oldTimeout = deviceClient.OperationTimeoutInMilliseconds;
-
-                try
-                {
-                    // For MQTT FaultInjection will terminate the connection prior to a PUBACK 
-                    // which leads to an infinite loop trying to resend the FaultInjection message.
-                    if (transport == Client.TransportType.Mqtt ||
-                        transport == Client.TransportType.Mqtt_Tcp_Only ||
-                        transport == Client.TransportType.Mqtt_WebSocket_Only)
-                    {
-                        deviceClient.OperationTimeoutInMilliseconds = 1000;
-                    }
-
-                    await deviceClient.SendEventAsync(
-                        FaultInjection.ComposeErrorInjectionProperties(
-                            faultType,
-                            reason,
-                            delayInSec,
-                            FaultInjection.DefaultDurationInSec
-                            )).ConfigureAwait(false);
-                }
-                catch (TimeoutException ex)
-                {
-                    _log.WriteLine($"{nameof(TimeoutException)}: {ex}");
-                }
-                finally
-                {
-                    deviceClient.OperationTimeoutInMilliseconds = oldTimeout;
-                    _log.WriteLine($"Fault injection requested.");
-                }
-
-                watch.Start();
-
-                _log.WriteLine($"Waiting for fault: {FaultInjection.WaitForDisconnectMilliseconds}ms");
-                await Task.Delay(FaultInjection.WaitForDisconnectMilliseconds).ConfigureAwait(false);
-
-                await serviceClient.SendAsync(
-                    testDevice.Id,
-                    ComposeC2DTestMessage(out payload, out messageId, out p1Value)).ConfigureAwait(false);
-                await VerifyReceivedC2DMessage(transport, deviceClient, payload, p1Value).ConfigureAwait(false);
-            }
-            finally
+            Func<DeviceClient, TestDevice, Task> testOperation = async (deviceClient, testDevice) =>
             {
-                await deviceClient.CloseAsync().ConfigureAwait(false);
-                await serviceClient.CloseAsync().ConfigureAwait(false);
+                string payload, messageId, p1Value;
+                await serviceClient.SendAsync(
+                    testDevice.Id,
+                    ComposeC2DTestMessage(out payload, out messageId, out p1Value)).ConfigureAwait(false);
+                await VerifyReceivedC2DMessage(transport, deviceClient, payload, p1Value).ConfigureAwait(false);
+            };
 
-                watch.Stop();
-                int timeToFinishFaultInjection = FaultInjection.DefaultDurationInSec * 1000 - (int)watch.ElapsedMilliseconds;
-                _log.WriteLine($"Waiting {timeToFinishFaultInjection}ms to ensure that FaultInjection duration passed.");
-                await Task.Delay(timeToFinishFaultInjection).ConfigureAwait(false);
-            }
+            Func<Task> cleanupOperation = () =>
+            {
+                return serviceClient.CloseAsync();
+            };
+
+            await FaultInjection.TestErrorInjectionTemplate(
+                DevicePrefix,
+                type,
+                transport,
+                faultType,
+                reason,
+                delayInSec,
+                FaultInjection.DefaultDurationInSec,
+                init,
+                testOperation,
+                cleanupOperation).ConfigureAwait(false);
         }
 
         public void Dispose()
@@ -494,4 +454,3 @@ namespace Microsoft.Azure.Devices.E2ETests
         }
     }
 }
-

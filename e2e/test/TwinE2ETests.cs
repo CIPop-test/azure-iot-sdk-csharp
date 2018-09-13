@@ -42,10 +42,6 @@ namespace Microsoft.Azure.Devices.E2ETests
             await Twin_DeviceSetsReportedPropertyAndGetsItBack(Client.TransportType.Amqp_Tcp_Only).ConfigureAwait(false);
         }
 
-#if NETCOREAPP2_0
-        // TODO: #302 In NetCoreApp2.0 the test is failing with TimeoutException.
-        [Ignore]
-#endif
         [TestMethod]
         public async Task Twin_DeviceSetsReportedPropertyAndGetsItBack_AmqpWs()
         {
@@ -82,10 +78,6 @@ namespace Microsoft.Azure.Devices.E2ETests
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
         }
 
-#if NETCOREAPP2_0
-        // TODO: #302 In NetCoreApp2.0 the test is failing with TimeoutException.
-        [Ignore]
-#endif
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Twin_DeviceReportedPropertiesTcpConnRecovery_AmqpWs()
@@ -126,10 +118,6 @@ namespace Microsoft.Azure.Devices.E2ETests
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
         }
 
-#if NETCOREAPP2_0
-        // TODO: #302 In NetCoreApp2.0 the test is failing with TimeoutException.
-        [Ignore]
-#endif
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Twin_DeviceReportedPropertiesGracefulShutdownRecovery_AmqpWs()
@@ -158,10 +146,6 @@ namespace Microsoft.Azure.Devices.E2ETests
             await Twin_ServiceSetsDesiredPropertyAndDeviceReceivesEvent(Client.TransportType.Amqp_Tcp_Only).ConfigureAwait(false);
         }
 
-#if NETCOREAPP2_0
-        // TODO: #302 In NetCoreApp2.0 the test is failing with TimeoutException.
-        [Ignore]
-#endif
         [TestMethod]
         public async Task Twin_ServiceSetsDesiredPropertyAndDeviceReceivesEvent_AmqpWs()
         {
@@ -186,10 +170,6 @@ namespace Microsoft.Azure.Devices.E2ETests
             await Twin_ServiceSetsDesiredPropertyAndDeviceReceivesEvent_WithObseleteCallbackSetter(Client.TransportType.Amqp_Tcp_Only).ConfigureAwait(false);
         }
 
-#if NETCOREAPP2_0
-        // TODO: #302 In NetCoreApp2.0 the test is failing with TimeoutException.
-        [Ignore]
-#endif
         [TestMethod]
         public async Task Twin_ServiceSetsDesiredPropertyAndDeviceReceivesEvent_WithObseleteCallbackSetter_AmqpWs()
         {
@@ -216,7 +196,6 @@ namespace Microsoft.Azure.Devices.E2ETests
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
         }
 
-        [Ignore] //TODO: #571
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Twin_DeviceDesiredPropertyUpdateTcpConnRecovery_Amqp()
@@ -227,7 +206,6 @@ namespace Microsoft.Azure.Devices.E2ETests
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
         }
 
-        [Ignore] //TODO: #571
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Twin_DeviceDesiredPropertyUpdateTcpConnRecovery_AmqpWs()
@@ -258,7 +236,6 @@ namespace Microsoft.Azure.Devices.E2ETests
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
         }
 
-        [Ignore] //TODO: #571
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Twin_DeviceDesiredPropertyUpdateGracefulShutdownRecovery_Amqp()
@@ -269,7 +246,6 @@ namespace Microsoft.Azure.Devices.E2ETests
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
         }
 
-        [Ignore] //TODO: #571
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Twin_DeviceDesiredPropertyUpdateGracefulShutdownRecovery_AmqpWs()
@@ -298,10 +274,6 @@ namespace Microsoft.Azure.Devices.E2ETests
             await Twin_ServiceSetsDesiredPropertyAndDeviceReceivesItOnNextGet(Client.TransportType.Amqp_Tcp_Only).ConfigureAwait(false);
         }
 
-#if NETCOREAPP2_0
-        // TODO: #302 In NetCoreApp2.0 the test is failing with TimeoutException.
-        [Ignore]
-#endif
         [TestMethod]
         public async Task Twin_ServiceSetsDesiredPropertyAndDeviceReceivesItOnNextGet_AmqpWs()
         {
@@ -326,18 +298,12 @@ namespace Microsoft.Azure.Devices.E2ETests
             await Twin_DeviceSetsReportedPropertyAndServiceReceivesIt(Client.TransportType.Amqp_Tcp_Only).ConfigureAwait(false);
         }
 
-#if NETCOREAPP2_0
-        // TODO: #302 In NetCoreApp2.0 the test is failing with TimeoutException.
-        [Ignore]
-#endif
         [TestMethod]
         public async Task Twin_DeviceSetsReportedPropertyAndServiceReceivesIt_AmqpWs()
         {
             await Twin_DeviceSetsReportedPropertyAndServiceReceivesIt(Client.TransportType.Amqp_WebSocket_Only).ConfigureAwait(false);
         }
 
-        // TODO: #243 : Once the service team deploys the fix for Issue #243, the test can be executed
-        [Ignore]
         [TestMethod]
         public async Task Twin_ServiceDoesNotCreateNullPropertyInCollection_Mqtt()
         {
@@ -352,21 +318,12 @@ namespace Microsoft.Azure.Devices.E2ETests
             await Twin_ServiceDoesNotCreateNullPropertyInCollection(Client.TransportType.Mqtt_WebSocket_Only).ConfigureAwait(false);
         }
 
-        // TODO: #243 : Once the service team deploys the fix for Issue #243, the test can be executed
-        [Ignore]
         [TestMethod]
         public async Task Twin_ServiceDoesNotCreateNullPropertyInCollection_Amqp()
         {
             await Twin_ServiceDoesNotCreateNullPropertyInCollection(Client.TransportType.Amqp_Tcp_Only).ConfigureAwait(false);
         }
 
-#if NETCOREAPP2_0
-        // TODO: #302 In NetCoreApp2.0 the test is failing with TimeoutException.
-        [Ignore]
-#else
-        // TODO: #243 : Once the service team deploys the fix for Issue #243, the test can be executed
-        [Ignore]
-#endif
         [TestMethod]
         public async Task Twin_ServiceDoesNotCreateNullPropertyInCollection_AmqpWs()
         {

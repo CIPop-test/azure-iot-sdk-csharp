@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Diagnostics;
@@ -280,7 +281,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
-        [ExpectedException(typeof(System.TimeoutException))]
+        [ExpectedException(typeof(TimeoutException))]
         public async Task Message_ThrottledConnectionLongTimeNoRecovery_Amqp()
         {
             await SendMessageRecovery(
@@ -295,7 +296,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
-        [ExpectedException(typeof(System.TimeoutException))]
+        [ExpectedException(typeof(TimeoutException))]
         public async Task Message_ThrottledConnectionLongTimeNoRecovery_AmqpWs()
         {
             await SendMessageRecovery(
@@ -310,7 +311,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
-        [ExpectedException(typeof(System.TimeoutException))]
+        [ExpectedException(typeof(QuotaExceededException))]
         public async Task Message_ThrottledConnectionLongTimeNoRecovery_Http()
         {
             await SendMessageRecovery(
@@ -324,7 +325,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
-        [ExpectedException(typeof(Client.Exceptions.DeviceMaximumQueueDepthExceededException))]
+        [ExpectedException(typeof(DeviceMaximumQueueDepthExceededException))]
         public async Task Message_QuotaExceededRecovery_Amqp()
         {
             await SendMessageRecovery(
@@ -338,7 +339,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
-        [ExpectedException(typeof(Client.Exceptions.DeviceMaximumQueueDepthExceededException))]
+        [ExpectedException(typeof(DeviceMaximumQueueDepthExceededException))]
         public async Task Message_QuotaExceededRecovery_AmqpWs()
         {
             await SendMessageRecovery(
@@ -352,7 +353,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
-        [ExpectedException(typeof(Client.Exceptions.QuotaExceededException))]
+        [ExpectedException(typeof(QuotaExceededException))]
         public async Task Message_QuotaExceededRecovery_Http()
         {
             await SendMessageRecovery(
@@ -366,7 +367,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
-        [ExpectedException(typeof(Client.Exceptions.UnauthorizedException))]
+        [ExpectedException(typeof(UnauthorizedException))]
         public async Task Message_AuthenticationRecovery_Amqp()
         {
             await SendMessageRecovery(
@@ -380,7 +381,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
-        [ExpectedException(typeof(Client.Exceptions.UnauthorizedException))]
+        [ExpectedException(typeof(UnauthorizedException))]
         public async Task Message_AuthenticationRecovery_AmqpWs()
         {
             await SendMessageRecovery(
@@ -394,7 +395,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
-        [ExpectedException(typeof(Client.Exceptions.UnauthorizedException))]
+        [ExpectedException(typeof(UnauthorizedException))]
         public async Task Message_AuthenticationRecovery_Http()
         {
             await SendMessageRecovery(
@@ -406,7 +407,6 @@ namespace Microsoft.Azure.Devices.E2ETests
                 FaultInjection.DefaultDurationInSec).ConfigureAwait(false);
         }
 
-        // TODO: not disconnecting
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_GracefulShutdownSendRecovery_Amqp()
@@ -419,7 +419,6 @@ namespace Microsoft.Azure.Devices.E2ETests
                 FaultInjection.DefaultDelayInSec).ConfigureAwait(false);
         }
 
-        // TODO: not disconnecting
         [TestMethod]
         [TestCategory("IoTHub-FaultInjection")]
         public async Task Message_GracefulShutdownSendRecovery_AmqpWs()
@@ -656,111 +655,42 @@ namespace Microsoft.Azure.Devices.E2ETests
             int durationInSec = FaultInjection.DefaultDurationInSec, 
             int retryDurationInMilliSec = FaultInjection.RecoveryTimeMilliseconds)
         {
-            TestDevice testDevice = await TestDevice.GetTestDeviceAsync(DevicePrefix, type).ConfigureAwait(false);
-            var deviceClient = DeviceClient.CreateFromConnectionString(testDevice.ConnectionString, transport);
-            EventHubTestListener testListener = await EventHubTestListener.CreateListener(testDevice.Id).ConfigureAwait(false);
+            EventHubTestListener testListener = null;
 
-            var watch = new Stopwatch();
-
-            try
+            Func<DeviceClient, TestDevice, Task> init = async (deviceClient, testDevice) =>
             {
+                testListener = await EventHubTestListener.CreateListener(testDevice.Id).ConfigureAwait(false);
                 deviceClient.OperationTimeoutInMilliseconds = (uint)retryDurationInMilliSec;
+            };
 
-                ConnectionStatus? lastConnectionStatus = null;
-                ConnectionStatusChangeReason? lastConnectionStatusChangeReason = null;
-                int setConnectionStatusChangesHandlerCount = 0;
-
-                deviceClient.SetConnectionStatusChangesHandler((status, statusChangeReason) =>
-                {
-                    _log.WriteLine($"{nameof(ConnectionStatusChangesHandler)}: status={status} statusChangeReason={statusChangeReason} count={setConnectionStatusChangesHandlerCount}");
-                    lastConnectionStatus = status;
-                    lastConnectionStatusChangeReason = statusChangeReason;
-                    setConnectionStatusChangesHandlerCount++;
-                });
-
-                await deviceClient.OpenAsync().ConfigureAwait(false);
-
-                if (transport != Client.TransportType.Http1)
-                {
-                    Assert.AreEqual(1, setConnectionStatusChangesHandlerCount);
-                    Assert.AreEqual(ConnectionStatus.Connected, lastConnectionStatus);
-                    Assert.AreEqual(ConnectionStatusChangeReason.Connection_Ok, lastConnectionStatusChangeReason);
-                }
-
+            Func<DeviceClient, TestDevice, Task> testOperation = async (deviceClient, testDevice) =>
+            {
                 string payload, p1Value;
+
                 Client.Message testMessage = ComposeD2CTestMessage(out payload, out p1Value);
                 await deviceClient.SendEventAsync(testMessage).ConfigureAwait(false);
 
                 bool isReceived = false;
                 isReceived = await testListener.WaitForMessage(testDevice.Id, payload, p1Value).ConfigureAwait(false);
+                Assert.IsTrue(isReceived);
+            };
 
-                _log.WriteLine($"Requesting fault injection type={faultType} reason={reason}, delay={delayInSec}s, duration={durationInSec}s");
-
-                uint oldTimeout = deviceClient.OperationTimeoutInMilliseconds;
-
-                try
-                {
-                    // For MQTT FaultInjection will terminate the connection prior to a PUBACK 
-                    // which leads to an infinite loop trying to resend the FaultInjection message.
-                    if (transport == Client.TransportType.Mqtt ||
-                        transport == Client.TransportType.Mqtt_Tcp_Only ||
-                        transport == Client.TransportType.Mqtt_WebSocket_Only)
-                    {
-                        deviceClient.OperationTimeoutInMilliseconds = 1000;
-                    }
-
-                    await deviceClient.SendEventAsync(
-                        FaultInjection.ComposeErrorInjectionProperties(
-                            faultType, 
-                            reason,
-                            delayInSec,
-                            durationInSec)).ConfigureAwait(false);
-                }
-                catch (TimeoutException ex)
-                {
-                    _log.WriteLine($"{nameof(TimeoutException)}: {ex}");
-                }
-                finally
-                {
-                    deviceClient.OperationTimeoutInMilliseconds = oldTimeout;
-                    _log.WriteLine("Fault injection requested.");
-                }
-
-                watch.Start();
-
-                _log.WriteLine($"Waiting for fault: {FaultInjection.WaitForDisconnectMilliseconds}ms");
-                await Task.Delay(FaultInjection.WaitForDisconnectMilliseconds).ConfigureAwait(false);
-
-                testMessage = ComposeD2CTestMessage(out payload, out p1Value);
-                await deviceClient.SendEventAsync(testMessage).ConfigureAwait(false);
-
-                isReceived = await testListener.WaitForMessage(testDevice.Id, payload, p1Value).ConfigureAwait(false);
-
-                await deviceClient.CloseAsync().ConfigureAwait(false);
-
-                if (transport == Client.TransportType.Mqtt ||
-                    transport == Client.TransportType.Mqtt_Tcp_Only ||
-                    transport == Client.TransportType.Mqtt_WebSocket_Only)
-                {
-                    // Our fault injection is only terminating the connection for MQTT. (HTTP is not connection-oriented, AMQP is not actually terminating the TCP layer.)
-                    Assert.IsTrue(setConnectionStatusChangesHandlerCount >= 4);
-                    Assert.AreEqual(ConnectionStatus.Disabled, lastConnectionStatus);
-                    Assert.AreEqual(ConnectionStatusChangeReason.Client_Close, lastConnectionStatusChangeReason);
-                }
-            }
-            finally
+            Func<Task> cleanupOperation = () =>
             {
-                await deviceClient.CloseAsync().ConfigureAwait(false);
-                await testListener.CloseAsync().ConfigureAwait(false);
-
-                watch.Stop();
-                if (durationInSec > 0)
-                {
-                    int timeToFinishFaultInjection = durationInSec * 1000 - (int)watch.ElapsedMilliseconds;
-                    _log.WriteLine($"Waiting {timeToFinishFaultInjection}ms to ensure that FaultInjection duration passed.");
-                    await Task.Delay(timeToFinishFaultInjection).ConfigureAwait(false);
-                }
-            }
+                return testListener.CloseAsync();
+            };
+            
+            await FaultInjection.TestErrorInjectionTemplate(
+                DevicePrefix,
+                type,
+                transport,
+                faultType,
+                reason,
+                delayInSec,
+                durationInSec,
+                init,
+                testOperation,
+                cleanupOperation).ConfigureAwait(false);
         }
         
         public void Dispose()
