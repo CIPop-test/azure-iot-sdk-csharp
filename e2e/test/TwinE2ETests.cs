@@ -310,8 +310,6 @@ namespace Microsoft.Azure.Devices.E2ETests
             await Twin_ServiceDoesNotCreateNullPropertyInCollection(Client.TransportType.Mqtt_Tcp_Only).ConfigureAwait(false);
         }
 
-        // TODO: #243 : Once the service team deploys the fix for Issue #243, the test can be executed
-        [Ignore]
         [TestMethod]
         public async Task Twin_ServiceDoesNotCreateNullPropertyInCollection_MqttWs()
         {
