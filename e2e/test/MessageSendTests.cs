@@ -20,7 +20,6 @@ namespace Microsoft.Azure.Devices.E2ETests
     {
         private const string DevicePrefix = "E2E_Message_";
         private const string ModulePrefix = "E2E_Module_";
-        private const string DevicePrefixTimeout = "E2E_Message_Timeout_";
         private static string ProxyServerAddress = Configuration.IoTHub.ProxyServerAddress;
         private static TestLogging _log = TestLogging.GetInstance();
 
@@ -500,7 +499,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         private async Task DefaultTimeout()
         {
-            TestDevice testDevice = await TestDevice.GetTestDeviceAsync(DevicePrefixTimeout).ConfigureAwait(false);
+            TestDevice testDevice = await TestDevice.GetTestDeviceAsync(DevicePrefix).ConfigureAwait(false);
             ServiceClient sender = ServiceClient.CreateFromConnectionString(Configuration.IoTHub.ConnectionString);
 
             var deviceClient = DeviceClient.CreateFromConnectionString(testDevice.ConnectionString, Client.TransportType.Amqp);
@@ -509,7 +508,7 @@ namespace Microsoft.Azure.Devices.E2ETests
 
         private async Task FastTimeout()
         {
-            TestDevice testDevice = await TestDevice.GetTestDeviceAsync(DevicePrefixTimeout).ConfigureAwait(false);
+            TestDevice testDevice = await TestDevice.GetTestDeviceAsync(DevicePrefix).ConfigureAwait(false);
             ServiceClient sender = ServiceClient.CreateFromConnectionString(Configuration.IoTHub.ConnectionString);
 
             var deviceClient = DeviceClient.CreateFromConnectionString(testDevice.ConnectionString, Client.TransportType.Amqp);

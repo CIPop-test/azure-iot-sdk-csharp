@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Devices.E2ETests
     [TestCategory("IoTHub-E2E")]
     public class TwinE2ETests : IDisposable
     {
-        private const string DevicePrefix = "E2E_Twin_CSharp_";
+        private const string DevicePrefix = "E2E_Twin_";
         private static TestLogging _log = TestLogging.GetInstance();
 
         private readonly ConsoleEventListener _listener;
